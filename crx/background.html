@@ -1,0 +1,47 @@
+<html>
+  <script type="text/javascript" src="javascripts/chrome_ex_oauthsimple.js"></script>
+  <script type="text/javascript" src="javascripts/chrome_ex_oauth.js"></script>
+  <script type="text/javascript">
+    var oauth = ChromeExOAuth.initBackgroundPage({
+      request_url:     'https://api.twitter.com/oauth/request_token',
+      authorize_url:   'https://api.twitter.com/oauth/authorize',
+      access_url:      'https://api.twitter.com/oauth/access_token',
+      consumer_key:    'X2ZXssNWxvQpZVU4zppSoQ',
+      consumer_secret: 'GyrbbQiJnnR5X3J645aAM4jRaZ64x0qBUzED0vh4'
+    });
+    oauth.authorize(function() {
+      // Twitterのユーザ情報取得
+      var url = 'http://api.twitter.com/1/account/verify_credentials.json';
+      var callback = function(data, xhr) {
+        var user = JSON.parse(data);
+        localStorage.setItem('user_id', user.id_str);
+      }
+      oauth.sendSignedRequest(url, callback, {
+        method: 'GET'
+      });
+    });
+    function requestServer(userId, url) {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function(data) {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+          } else {
+            alert(xhr.status);
+          }
+        }
+      };
+      xhr.open('POST', 'http://sakura.mesolabs.com:3000/', true);
+      xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
+      xhr.send('userId=' + userId + '&url=' + encodeURIComponent(url));
+    }
+    chrome.extension.onRequest.addListener(
+      function(request, sender, sendResponse) {
+        var userId = localStorage.getItem('user_id');
+        if (userId) {
+          requestServer(userId, sender.tab.url);
+        }
+        sendResponse({});
+      }
+    );
+ </script>
+</html>
