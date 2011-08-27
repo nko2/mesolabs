@@ -169,11 +169,13 @@ app.post('/', function(req, res) {
 });
 
 function saveCache(namespace, data) {
-  var len = db.llen(namespace);
-  if (len >= 30) {
-    db.lpop(namespace);
-  }
-  db.rpush(namespace, JSON.stringify(data));
+  db.llen(namespace, function(err, len) {
+    if (err) return console.log('Redis Error: ' + err);
+    if (len >= 30) {
+      db.lpop(namespace, redis.print);
+    }
+    db.rpush(namespace, JSON.stringify(data), redis.print);
+  });
 }
 
 app.listen(port);
@@ -188,12 +190,12 @@ function addChannel(namespace) {
     if (value === 1) return;
     io.of('/' + namespace).on('connection', function(socket) {
       db.lrange(namespace, 0, 29, function(err, value) {
-        socket.emit('access', value);
+        value.forEach(function(element, index, array) {
+          socket.emit('access', JSON.parse(element));
+        });
       });
       ee.on(namespace, function(data) {
-        data.forEach(function(element, index, array) {
-          socket.emit('access', element);
-        });
+        socket.emit('access', data);
       });
     });
     db.sadd('namespaces', namespace, redis.print);
@@ -202,8 +204,8 @@ function addChannel(namespace) {
 
 io.sockets.on('connection', function(socket) {
   db.lrange('_all', 0, 29, function(err, value) {
-    data.forEach(function(element, index, array) {
-      socket.emit('access', element);
+    value.forEach(function(element, index, array) {
+      socket.emit('access', JSON.parse(element));
     });
   });
   ee.on('_all', function(data) {
