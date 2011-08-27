@@ -1,7 +1,7 @@
 script(type='text/javascript')
   $(function() {
-    var socket = io.connect('http://mesolabs.no.de/' + userId);
     var userId = $('#userId').text().trim();
+    var socket = io.connect('http://mesolabs.no.de/' + userId);
     socket.on('access', function(data) {
       console.log(data);
       if ($('.page').size() > 30) {
