@@ -79,7 +79,7 @@ app.get('/', function(req, res){
         profile_url: profileUrl
       };
       db.set('name#' + user.name, JSON.stringify(user), redis.print);
-      db.set(user.id, JSON.stringify(user), redis.print);
+      db.set('id#' + user.id, JSON.stringify(user), redis.print);
       res.render('authok', {
         title: TITLE,
         authenticated: true,
@@ -184,23 +184,23 @@ console.log("Express server listening on port %d in %s mode", app.address().port
 var io = socketio.listen(app);
 io.set('polling duration', 30 * 60);
 io.set('close timeout', 30 * 60);
-function addChannel(namespace) {
-  db.sismember('namespaces', namespace, function(err, value) {
+function addChannel(userId) {
+  db.sismember('namespaces', userId, function(err, value) {
     if (err) throw err;
     if (value === 1) return;
-    io.of('/' + namespace).on('connection', function(socket) {
-      db.lrange(namespace, 0, 29, function(err, value) {
+    io.of('/' + userId).on('connection', function(socket) {
+      db.lrange(userId, 0, 29, function(err, value) {
         if (err) return console.log('Redis Error: ' + err);
         console.log(value);
         value.forEach(function(element, index, array) {
           socket.emit('access', JSON.parse(element));
         });
       });
-      ee.on(namespace, function(data) {
+      ee.on(userId, function(data) {
         socket.emit('access', data);
       });
     });
-    db.sadd('namespaces', namespace, redis.print);
+    db.sadd('namespaces', userId, redis.print);
   });
 }
 
