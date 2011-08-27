@@ -173,6 +173,13 @@ app.listen(port);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
 var io = socketio.listen(app);
+io.set('transports', [
+  'websocket',
+  'flashsocket',
+  'htmlfile',
+  'xhr-polling',
+  'jsonp-polling'
+]);
 function addChannel(namespace) {
   db.sismember('namespaces', namespace, function(err, value) {
     if (err) throw err;
