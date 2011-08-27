@@ -40,11 +40,11 @@ app.configure('development', function(){
 });
 
 app.configure('production', function(){
-  app.use(auth[auth.Twitter({
+  app.use(auth([auth.Twitter({
     consumerKey: settings.consumer_key,
     consumerSecret: settings.consumer_secret,
     callback: 'http://mesolabs.no.de/signin'
-  })]);
+  })]));
   app.use(app.router);
   app.use(express.errorHandler());
   port = 80;
