@@ -188,7 +188,7 @@ io.set('polling duration', 30 * 60);
 io.set('close timeout', 30 * 60);
 function addChannel(userId) {
   db.sismember('namespaces', userId, function(err, value) {
-    if (err) throw err;
+    if (err) return console.log('Redis Error: ' + err);
     if (value === 1) return;
     io.of('/' + userId).on('connection', function(socket) {
       db.lrange(userId, 0, 29, function(err, value) {
