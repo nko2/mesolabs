@@ -5,16 +5,46 @@
     <script type="text/javascript" src="http://code.jquery.com/jquery-1.6.2.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
-        // restore
+          var httpsFlag = localStorage.getItem('https');
+          var ipaddressFlag = localStorage.getItem('ipaddress');
+          var excludeHosts = localStorage.getItem('excludehosts');
+          console.log(httpsFlag);
+          if (httpsFlag !== 'true') {
+            $("input:checkbox[name^='https']").attr('checked', false);
+          }
+          if (ipaddressFlag !== 'true') {
+            $("input:checkbox[name^='ipaddress']").attr('checked', false);
+          }
+          $("textarea").val(excludeHosts);
+
+
+          $(":checkbox").click(function() {
+            if ($("input:checkbox[name^='https']").attr('checked') === 'checked') {
+              localStorage.setItem('https', 'true');
+            } else {
+              localStorage.setItem('https', 'false');
+            }
+            if ($("input:checkbox[name^='ipaddress']").attr('checked') === 'checked') {
+              localStorage.setItem('ipaddress', 'true');
+            } else {
+              localStorage.setItem('ipaddress', 'false');
+            }
+          });
+          $("textarea").blur(function() {
+            var hosts = $('textarea').val().trim();
+            console.log(hosts);
+            localStorage.setItem('excludehosts', hosts);
+          });
       });
     </script>
   </head>
   <body>
-    <ul>
-      <li>TODO: 除外URLパターンの指定(複数)</li>
-      <li>TODO: httpsのON/OFF</li>
-      <li>TODO: IP AddressのON/OFF</li>
-      <li>TODO: 自動Tweet機能</li>
+    <h1>Options / オプション</h1>
+    <h3>This extension will send us all URLs you access. So DO NOT USE this extension on your PC for work.</h3>
+    <h3>この拡張はブラウザがアクセスした全てのURLをサーバに送信します。会社PC等で使わないように注意してください。</h3>
+    <p><input type="checkbox" name="https" value="true" checked="checked">Do NOT send HTTPS pages / HTTPSのページでは情報を送信しない</input></p>
+    <p><input type="checkbox" name="ipaddress" value="true" checked="checked">Do NOT send IP Address pages (i.e. 192.168.0.1) / IPアドレスでアクセスしたページでは情報を送信しない</input></p>
+    <p>Exclude Hosts (Regex) / 情報を送信しないホストを指定<br /><textarea name="excludehosts" rows="4" cols="40" placeholder="*.mycompany.com"></textarea></p>
     </ul>
   </body>
 </html>

@@ -30,6 +30,20 @@
           }
         }
       };
+
+      var https = localStorage.getItem('https');
+      var ipaddress = localStorage.getItem('ipaddress');
+      var excludeHosts = localStorage.getItem('excludeHosts');
+
+      if (https === 'true' && url.lastIndexOf('https', 0) === 0) {
+        console.log('https will never send.');
+        return;
+      }
+      if (ipaddress === 'true' && isIpaddress(url)) {
+        console.log('ipaddress will never send.');
+        return;
+      }
+
       //xhr.open('POST', 'http://mesolabs.no.de/', true);
       xhr.open('POST', 'http://localhost:3000/', true);
       xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
@@ -44,5 +58,11 @@
         sendResponse({});
       }
     );
+    function isIpaddress(url) {
+      var host = url.split('/')[2];
+      console.log(url);
+      console.log(host);
+      return /^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$/.test(host);
+    }
  </script>
 </html>

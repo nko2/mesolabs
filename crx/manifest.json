@@ -11,6 +11,8 @@
   "background_page": "background.html",
   "permissions": [
     "tabs",
+    "http://localhost:3000/*",
+    "http://localhost/*",
     "http://mesolabs.no.de/*",
     "https://api.twitter.com/*",
     "http://api.twitter.com/*"
