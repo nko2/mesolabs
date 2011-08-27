@@ -4,7 +4,8 @@
  */
 
 var express = require('express'),
-    nko = require('nko')('sWq0rm8zUcxb3Isa');
+    nko = require('nko')('sWq0rm8zUcxb3Isa'),
+    RedisStore = require('connect-redis')(express);
 
 var app = module.exports = express.createServer();
 
@@ -16,7 +17,10 @@ app.configure(function(){
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(express.cookieParser());
-  app.use(express.session({ secret: 'your secret here' }));
+  app.use(express.session({
+    secret: 'mesolabs',
+    store: new RedisStore()
+  }));
   app.use(app.router);
   app.use(express.static(__dirname + '/public'));
 });
