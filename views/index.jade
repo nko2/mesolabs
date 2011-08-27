@@ -2,10 +2,10 @@ script(type='text/javascript')
   $(function() {
     var socket = io.connect();
     socket.on('access', function(data) {
+      console.log(data);
       if ($('.page').size() > 30) {
         $('.page:last').remove();
       }
-
       $('#pages').prepend('<p class="page">' + data.title + ' ( ' + data.url + ' )</p>');
     });
   });
