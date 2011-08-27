@@ -15,7 +15,6 @@ var express = require('express'),
     http = require('http');
 
 var app = module.exports = express.createServer();
-var port;
 var db = redis.createClient();
 db.del('namespaces', redis.print);
 
@@ -41,7 +40,6 @@ app.configure('development', function(){
   })]));
   app.use(app.router);
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
-  port = 3000;
 });
 
 app.configure('production', function(){
@@ -52,7 +50,6 @@ app.configure('production', function(){
   })]));
   app.use(app.router);
   app.use(express.errorHandler());
-  port = 80;
 });
 
 // Routes
@@ -180,7 +177,7 @@ function saveCache(namespace, data) {
   });
 }
 
-app.listen(port);
+app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
 var io = socketio.listen(app);
