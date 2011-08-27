@@ -1,7 +1,29 @@
+script(type='text/javascript')
+  $(function() {
+    var socket = io.connect();
+    socket.on('access', function(data) {
+      console.log(data);
+      if ($('.page').size() > 30) {
+        $('.page:last').remove();
+      }
+      var user = data.user;
+      $('#pages').prepend(
+        '<p class="page">' +
+          '<a href="/' + user.name + '">' +
+            '<img src="' + user.profile_url + '"/>' + 
+          '</a>' +
+          '<span style="font-weight: bold">' + data.title + '</span> ' +
+          '(<a href="' + data.url + '">' + data.url + '</a>)' +
+        '</p>');
+    });
+  });
 h2 Welcome, 
   =name
   !!
 h3 If you want to be *stalked* by someone, install this 
   a(href="/stalkr.crx") Google Chrome Extension
   .
-
+h3
+  a(href="#") view stream that shows who you follow on Twitter.
+h2 People are accessing these pages NOW.
+#pages
