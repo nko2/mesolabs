@@ -1,3 +1,20 @@
-a(href="/signin")
-  img(src="http://si0.twimg.com/images/dev/buttons/sign-in-with-twitter-l.png")
+script(type='text/javascript')
+  $(function() {
+    var socket = io.connect();
+    socket.on('access', function(data) {
+      if ($('.page').size() > 30) {
+        $('.page:last').remove();
+      }
 
+      $('#pages').prepend('<p class="page">' + data.title + ' ( ' + data.url + ' )</p>');
+    });
+  });
+h3 If you want to *stalk* who you follow on Twitter, 
+  a(href="/signin")
+    img(src="http://si0.twimg.com/images/dev/buttons/sign-in-with-twitter-l.png")
+h3 and if you want to be *stalked* by someone, install this 
+  a(href="/stalkr.crx") Google Chrome Extension
+  .
+
+h2 People are accessing these pages NOW.
+#pages

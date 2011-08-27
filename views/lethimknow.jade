@@ -1,0 +1,13 @@
+script(type="text/javascript", src="http://platform.twitter.com/widgets.js")
+script(type="text/javascript")
+  $(function() {
+    var name = $('#name').text().trim();
+    $('#twbutton').attr('href', "http://twitter.com/share?text=%40" + name + "%20Woud%20you%20please%20try%20my%20%23nodeknockout%20application.&url=http://mesolabs.no.de/", class="twitter-share-button");
+  });
+#name(style='display: none;')= name
+h2= name
+  &nbsp;is not a member of Stalkr.
+h2 Invite 
+  =name
+  &nbsp;to this service.
+a#twbutton.twitter-share-button Tweet

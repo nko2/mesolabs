@@ -4,8 +4,11 @@
  */
 
 var express = require('express'),
+    socketio = require('socket.io'),
+    events = require('events')
     nko = require('nko')('sWq0rm8zUcxb3Isa'),
     RedisStore = require('connect-redis')(express),
+    redis = require('redis'),
     auth = require('connect-auth'),
     scraper = require('./lib/scraper'),
     settings = require('./settings.js'),
@@ -13,6 +16,8 @@ var express = require('express'),
 
 var app = module.exports = express.createServer();
 var port;
+var db = redis.createClient();
+db.del('namespaces', redis.print);
 // Configuration
 
 app.configure(function(){
@@ -60,13 +65,13 @@ app.get('/', function(req, res){
       authenticated: false
     });
   } else {
-    var user = new User(
-      req.getAuthDetails().user.user_id,
-      req.getAuthDetails().user.username,
-      req.getAuthDetails()['twitter_oauth_token'],
-      req.getAuthDetails()['twitter_oauth_token_secret']
-    );
-    console.dir(user);
+    var user = {
+      id:   req.getAuthDetails().user.user_id,
+      name: req.getAuthDetails().user.username,
+      access_token: req.getAuthDetails()['twitter_oauth_token'],
+      access_token_secret: req.getAuthDetails()['twitter_oauth_token_secret'],
+    };
+    db.set(user.name, JSON.stringify(user), redis.print);
     res.render('authok', {
       title: TITLE,
       authenticated: true,
@@ -96,16 +101,76 @@ app.get('/logout', function(req, res) {
   res.redirect('/', 303);
 });
 
+app.get('/:name', function(req, res) {
+  if (!req.isAuthenticated()) {
+    res.redirect('/', 303);
+    return;
+  }
+  db.get(req.params.name, function(err, value) {
+    if (err) return console.log(err);
+    if (value) {
+      var userId = (JSON.parse(value)).id;
+      addChannel(userId);
+      res.render('individual', {
+        title: TITLE,
+        authenticated: true,
+        name: req.params.name,
+        userId: userId
+      });
+    } else {
+      res.render('lethimknow', {
+        title: TITLE,
+        authenticated: true,
+        name: req.params.name,
+        userId: userId
+      });
+    }
+  });
+});
+
+var ee = new events.EventEmitter();
 app.post('/', function(req, res) {
   var userId = req.body.userId;
   var url = req.body.url;
-  console.log(userId + ": " + url);
   scraper(url, function(err, $) {
     if (err) return console.log('ERROR:' + err);
-    console.log($('title').text().trim());
+    var title = $('title').text().trim();
+    if (title) {
+      url = decodeURIComponent(url);
+      console.log(userId + ": " + title + "(" + url + ")");
+      ee.emit(userId, {
+        url: url,
+        title: title
+      });
+      ee.emit('_all', {
+        userId: userId,
+        url: url,
+        title: title
+      });
+    }
   });
   res.send(200);
 });
 
 app.listen(port);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+
+var io = socketio.listen(app);
+function addChannel(namespace) {
+  db.sismember('namespaces', namespace, function(err, value) {
+    if (err) throw err;
+    if (value === 1) return;
+    io.of('/' + namespace).on('connection', function(socket) {
+      ee.on(namespace, function(data) {
+        socket.emit('access', data);
+      });
+    });
+    db.sadd('namespaces', namespace, redis.print);
+  });
+}
+
+io.sockets.on('connection', function(socket) {
+  ee.on('_all', function(data) {
+    socket.emit('access', data);
+  });
+});
