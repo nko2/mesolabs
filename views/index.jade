@@ -6,7 +6,15 @@ script(type='text/javascript')
       if ($('.page').size() > 30) {
         $('.page:last').remove();
       }
-      $('#pages').prepend('<p class="page">' + data.title + ' ( ' + data.url + ' )</p>');
+      var user = data.user;
+      $('#pages').prepend(
+        '<p class="page">' +
+          '<a href="http://localhost:3000/' + user.name + '">' +
+            '<img src="' + user.profile_url + '"/>' + 
+          '</a>' +
+          '<span style="font-weight: bold">' + data.title + '</span> ' +
+          '(<a href="' + data.url + '">' + data.url + '</a>)' +
+        '</p>');
     });
   });
 h3 If you want to *stalk* who you follow on Twitter, 

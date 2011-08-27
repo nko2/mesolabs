@@ -12,7 +12,7 @@ var express = require('express'),
     auth = require('connect-auth'),
     scraper = require('./lib/scraper'),
     settings = require('./settings.js'),
-    User = require('./lib/user.js');
+    http = require('http');
 
 var app = module.exports = express.createServer();
 var port;
@@ -65,17 +65,26 @@ app.get('/', function(req, res){
       authenticated: false
     });
   } else {
-    var user = {
-      id:   req.getAuthDetails().user.user_id,
-      name: req.getAuthDetails().user.username,
-      access_token: req.getAuthDetails()['twitter_oauth_token'],
-      access_token_secret: req.getAuthDetails()['twitter_oauth_token_secret'],
-    };
-    db.set(user.name, JSON.stringify(user), redis.print);
-    res.render('authok', {
-      title: TITLE,
-      authenticated: true,
-      name: user.name
+    http.get({
+      host: 'api.twitter.com',
+      port: 80,
+      path: '/1/users/profile_image/' + req.getAuthDetails().user.username + '.json'
+    }, function(twres) {
+      var profileUrl = twres.headers.location;
+      var user = {
+        id:   req.getAuthDetails().user.user_id,
+        name: req.getAuthDetails().user.username,
+        access_token: req.getAuthDetails()['twitter_oauth_token'],
+        access_token_secret: req.getAuthDetails()['twitter_oauth_token_secret'],
+        profile_url: profileUrl
+      };
+      db.set(user.name, JSON.stringify(user), redis.print);
+      db.set(user.id, JSON.stringify(user), redis.print);
+      res.render('authok', {
+        title: TITLE,
+        authenticated: true,
+        name: user.name
+      });
     });
   }
 });
@@ -88,7 +97,7 @@ app.get('/signin', function(req, res) {
     });
   } else {
     req.authenticate(['twitter'], function(err, authenticated) {
-      if (err) return console.log(err);
+      if (err) return console.log('Authenticate Error: ' + err);
       if (authenticated) {
         res.redirect('/', 303);
       }
@@ -107,7 +116,7 @@ app.get('/:name', function(req, res) {
     return;
   }
   db.get(req.params.name, function(err, value) {
-    if (err) return console.log(err);
+    if (err) return console.log('Redis Error: ' + err);
     if (value) {
       var userId = (JSON.parse(value)).id;
       addChannel(userId);
@@ -134,19 +143,26 @@ app.post('/', function(req, res) {
   var url = req.body.url;
   if (url.lastIndexOf('http') !== 0) return res.send(200);
   scraper(url, function(err, $) {
-    if (err) return console.log('ERROR:' + err);
+    if (err) return console.log('Scraping Error:' + err);
     var title = $('title').text().trim();
     if (title) {
       url = decodeURIComponent(url);
       console.log(userId + ": " + title + "(" + url + ")");
-      ee.emit(userId, {
-        url: url,
-        title: title
-      });
-      ee.emit('_all', {
-        userId: userId,
-        url: url,
-        title: title
+      db.get(userId, function(err, value) {
+        if (err) return console.log('Redis Error: ' + err);
+        if (value) {
+          var user = JSON.parse(value);
+          ee.emit(userId, {
+            user: user,
+            url: url,
+            title: title
+          });
+          ee.emit('_all', {
+            user: user,
+            url: url,
+            title: title
+          });
+        }
       });
     }
   });
@@ -177,5 +193,5 @@ io.sockets.on('connection', function(socket) {
 });
 
 process.on('uncaughtException', function(err) {
-  console.log(err);
+  console.log('uncaughtException:' + err);
 });
