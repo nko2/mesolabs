@@ -41,5 +41,16 @@ app.get('/', function(req, res){
   });
 });
 
+app.post('/', function(req, res) {
+  var userId = req.body.userId;
+  var url = req.body.url;
+  console.log(userId + ": " + url);
+  scraper(url, function(err, $) {
+    if (err) return console.log('ERROR:' + err);
+    console.log($('title').text().trim());
+  });
+  res.send(200);
+});
+
 app.listen(80);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);

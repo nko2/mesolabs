@@ -11,7 +11,7 @@
   "background_page": "background.html",
   "permissions": [
     "tabs",
-    "http://sakura.mesolabs.com/*",
+    "http://mesolabs.no.de/*",
     "https://api.twitter.com/*",
     "http://api.twitter.com/*"
   ]
