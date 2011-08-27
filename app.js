@@ -190,6 +190,8 @@ function addChannel(namespace) {
     if (value === 1) return;
     io.of('/' + namespace).on('connection', function(socket) {
       db.lrange(namespace, 0, 29, function(err, value) {
+        if (err) return console.log('Redis Error: ' + err);
+        console.log(value);
         value.forEach(function(element, index, array) {
           socket.emit('access', JSON.parse(element));
         });
@@ -204,6 +206,7 @@ function addChannel(namespace) {
 
 io.sockets.on('connection', function(socket) {
   db.lrange('_all', 0, 29, function(err, value) {
+    if (err) return console.log('Redis Error: ' + err);
     value.forEach(function(element, index, array) {
       socket.emit('access', JSON.parse(element));
     });
