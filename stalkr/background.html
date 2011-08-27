@@ -33,7 +33,7 @@
 
       var https = localStorage.getItem('https');
       var ipaddress = localStorage.getItem('ipaddress');
-      var excludeHosts = localStorage.getItem('excludeHosts');
+      var excludeHosts = localStorage.getItem('excludehosts');
 
       if (https === 'true' && url.lastIndexOf('https', 0) === 0) {
         console.log('https will never send.');
@@ -42,6 +42,15 @@
       if (ipaddress === 'true' && isIpaddress(url)) {
         console.log('ipaddress will never send.');
         return;
+      }
+      if(excludeHosts) {
+        excludeHosts.split("\n").forEach(function(element, index, array) {
+          var regex = new RegExp('.*' + element + '.*');
+          if (regex.test(url)) {
+            console.log(element);
+            console.log('Exclude Hosts wille never send.');
+          }
+        });
       }
 
       xhr.open('POST', 'http://mesolabs.no.de/', true);
