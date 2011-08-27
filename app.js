@@ -141,6 +141,7 @@ var ee = new events.EventEmitter();
 app.post('/', function(req, res) {
   var userId = req.body.userId;
   var url = req.body.url;
+  var timestamp = new Date().getTime();
   if (url.lastIndexOf('http') !== 0) return res.send(200);
   scraper(url, function(err, $) {
     if (err) return console.log('Scraping Error:' + err);
@@ -148,14 +149,15 @@ app.post('/', function(req, res) {
     if (title) {
       url = decodeURIComponent(url);
       console.log(userId + ": " + title + "(" + url + ")");
-      db.get(userId, function(err, value) {
+      db.get('id#' + userId, function(err, value) {
         if (err) return console.log('Redis Error: ' + err);
         if (value) {
           var user = JSON.parse(value);
           var data = {
             user: user,
             url: url,
-            title: title
+            title: title,
+            timestamp: timestamp
           };
           saveCache(userId, data);
           saveCache('_all', data);
