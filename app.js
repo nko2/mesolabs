@@ -5,7 +5,8 @@
 
 var express = require('express'),
     nko = require('nko')('sWq0rm8zUcxb3Isa'),
-    RedisStore = require('connect-redis')(express);
+    RedisStore = require('connect-redis')(express),
+    scraper = require('./lib/scraper');
 
 var app = module.exports = express.createServer();
 
@@ -52,5 +53,5 @@ app.post('/', function(req, res) {
   res.send(200);
 });
 
-app.listen(80);
+app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);

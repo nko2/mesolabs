@@ -9,5 +9,6 @@
     , "socket.io": ">=0.7"
     , "nko": "*"
     , "connect-redis": "*"
+    , "jsdom": "*"
   }
 }
