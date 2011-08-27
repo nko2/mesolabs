@@ -175,3 +175,7 @@ io.sockets.on('connection', function(socket) {
     socket.emit('access', data);
   });
 });
+
+process.on('uncaughtException', function(err) {
+  console.log(err);
+});
