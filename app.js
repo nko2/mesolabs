@@ -152,22 +152,29 @@ app.post('/', function(req, res) {
         if (err) return console.log('Redis Error: ' + err);
         if (value) {
           var user = JSON.parse(value);
-          ee.emit(userId, {
+          var data = {
             user: user,
             url: url,
             title: title
-          });
-          ee.emit('_all', {
-            user: user,
-            url: url,
-            title: title
-          });
+          };
+          saveCache(userId, data);
+          saveCache('_all', data);
+          ee.emit(userId, data);
+          ee.emit('_all', data);
         }
       });
     }
   });
   res.send(200);
 });
+
+function saveCache(namespace, data) {
+  var len = db.llen(namespace);
+  if (len >= 30) {
+    db.lpop(namespace);
+  }
+  db.rpush(namespace, JSON.stringify(data));
+}
 
 app.listen(port);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
@@ -180,8 +187,13 @@ function addChannel(namespace) {
     if (err) throw err;
     if (value === 1) return;
     io.of('/' + namespace).on('connection', function(socket) {
+      db.lrange(namespace, 0, 29, function(err, value) {
+        socket.emit('access', value);
+      });
       ee.on(namespace, function(data) {
-        socket.emit('access', data);
+        data.forEach(function(element, index, array) {
+          socket.emit('access', element);
+        });
       });
     });
     db.sadd('namespaces', namespace, redis.print);
@@ -189,6 +201,11 @@ function addChannel(namespace) {
 }
 
 io.sockets.on('connection', function(socket) {
+  db.lrange('_all', 0, 29, function(err, value) {
+    data.forEach(function(element, index, array) {
+      socket.emit('access', element);
+    });
+  });
   ee.on('_all', function(data) {
     socket.emit('access', data);
   });
