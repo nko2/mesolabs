@@ -2,7 +2,7 @@ script(type='text/javascript')
   $(function() {
     var userId = $('#userId').text().trim();
     console.log(userId);
-    var socket = io.connect('http://localhost:3000/' + userId);
+    var socket = io.connect('http://mesolabs.no.de/' + userId);
     socket.on('access', function(data) {
       if ($('.page').size() > 30) {
         $('.page:last').remove();
