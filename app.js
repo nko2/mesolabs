@@ -218,3 +218,5 @@ io.sockets.on('connection', function(socket) {
 process.on('uncaughtException', function(err) {
   console.log('uncaughtException:' + err);
 });
+console.log('end of app.js');
+
