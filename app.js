@@ -18,8 +18,8 @@ var app = module.exports = express.createServer();
 var port;
 var db = redis.createClient();
 db.del('namespaces', redis.print);
-// Configuration
 
+// Configuration
 app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
@@ -132,6 +132,7 @@ var ee = new events.EventEmitter();
 app.post('/', function(req, res) {
   var userId = req.body.userId;
   var url = req.body.url;
+  if (url.lastIndexOf('http') !== 0) return res.send(200);
   scraper(url, function(err, $) {
     if (err) return console.log('ERROR:' + err);
     var title = $('title').text().trim();

@@ -45,19 +45,33 @@
       }
 
       //xhr.open('POST', 'http://mesolabs.no.de/', true);
-      xhr.open('POST', 'http://mesolabs.no.de/', true);
+      xhr.open('POST', 'http://localhost:3000/', true);
       xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
       xhr.send('userId=' + userId + '&url=' + encodeURIComponent(url));
     }
-    chrome.extension.onRequest.addListener(
-      function(request, sender, sendResponse) {
-        var userId = localStorage.getItem('user_id');
-        if (userId) {
-          requestServer(userId, sender.tab.url);
-        }
-        sendResponse({});
+    chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
+      if (changeInfo.url) {
+        chrome.tabs.getSelected(null, function(tab) {
+          if (tabId === tab.id) {
+            var userId = localStorage.getItem('user_id');
+            var url = changeInfo.url;
+            if (userId && url) {
+              requestServer(userId, tab.url);
+            }
+          }
+        });
       }
-    );
+    });
+
+    chrome.tabs.onSelectionChanged.addListener(function(tabId, selectInfo) {
+      chrome.tabs.get(tabId, function(tab) {
+        var userId = localStorage.getItem('user_id');
+        var url = tab.url;
+        if (userId && url) {
+          requestServer(userId, tab.url);
+        }
+      });
+    });
     function isIpaddress(url) {
       var host = url.split('/')[2];
       console.log(url);
