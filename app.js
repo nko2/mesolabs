@@ -107,6 +107,18 @@ app.get('/logout', function(req, res) {
   res.redirect('/', 303);
 });
 
+app.get('/who_you_follow', function(req, res) {
+  if (!req.isAuthenticated()) {
+    res.redirect('/', 303);
+    return;
+  }
+  res.render('authok', {
+    title: TITLE,
+    authenticated: true,
+    name: req.getAuthDetails().user.username
+  });
+});
+
 app.get('/:name', function(req, res) {
   if (!req.isAuthenticated()) {
     res.redirect('/', 303);
@@ -181,6 +193,7 @@ app.listen(3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
 var io = socketio.listen(app);
+io.set('log level', 2);
 io.set('polling duration', 30 * 60);
 io.set('close timeout', 30 * 60);
 function addChannel(userId) {
