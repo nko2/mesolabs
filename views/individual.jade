@@ -10,7 +10,7 @@ script(type='text/javascript')
       var user = data.user;
       $('#pages').prepend(
         '<p class="page">' +
-          '<a href="http://localhost:3000/' + user.name + '">' +
+          '<a href="/' + user.name + '">' +
             '<img src="' + user.profile_url + '"/>' + 
           '</a>' +
           '<span style="font-weight: bold">' + data.title + '</span> ' +
