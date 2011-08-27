@@ -3,7 +3,8 @@
  * Module dependencies.
  */
 
-var express = require('express');
+var express = require('express'),
+    nko = require('nko')('sWq0rm8zUcxb3Isa');
 
 var app = module.exports = express.createServer();
 
