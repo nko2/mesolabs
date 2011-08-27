@@ -174,6 +174,7 @@ console.log("Express server listening on port %d in %s mode", app.address().port
 
 var io = socketio.listen(app);
 io.set('polling duration', 30 * 60);
+io.set('close timeout', 30 * 60);
 function addChannel(namespace) {
   db.sismember('namespaces', namespace, function(err, value) {
     if (err) throw err;
