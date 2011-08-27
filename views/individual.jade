@@ -8,6 +8,7 @@ script(type='text/javascript')
         $('.page:last').remove();
       }
       var user = data.user;
+      $('#loading').hide();
       $('#pages').prepend(
         '<p class="page">' +
           '<a href="/' + user.name + '">' +
@@ -22,3 +23,4 @@ script(type='text/javascript')
 h2= name
  |&nbsp;is accessing these pages NOW.
 #pages
+  img#loading(src="/loading.gif")

@@ -7,6 +7,7 @@ script(type='text/javascript')
         $('.page:last').remove();
       }
       var user = data.user;
+      $('#loading').hide();
       $('#pages').prepend(
         '<p class="page">' +
           '<a href="/' + user.name + '">' +
@@ -27,3 +28,4 @@ h3
   a(href="#") view stream that shows who you follow on Twitter.
 h2 People are accessing these pages NOW.
 #pages
+  img#loading(src="/loading.gif")
