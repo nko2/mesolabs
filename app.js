@@ -78,7 +78,7 @@ app.get('/', function(req, res){
         access_token_secret: req.getAuthDetails()['twitter_oauth_token_secret'],
         profile_url: profileUrl
       };
-      db.set(user.name, JSON.stringify(user), redis.print);
+      db.set('name#' + user.name, JSON.stringify(user), redis.print);
       db.set(user.id, JSON.stringify(user), redis.print);
       res.render('authok', {
         title: TITLE,
@@ -115,7 +115,7 @@ app.get('/:name', function(req, res) {
     res.redirect('/', 303);
     return;
   }
-  db.get(req.params.name, function(err, value) {
+  db.get('name#' + req.params.name, function(err, value) {
     if (err) return console.log('Redis Error: ' + err);
     if (value) {
       var userId = (JSON.parse(value)).id;
