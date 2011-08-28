@@ -10,7 +10,6 @@
     , "nko": "*"
     , "connect-redis": "*"
     , "jsdom": "*"
-    , "connect-auth": "*"
     , "redis": "*"
   }
 }

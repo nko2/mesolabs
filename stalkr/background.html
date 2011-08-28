@@ -15,12 +15,16 @@
       var callback = function(data, xhr) {
         var user = JSON.parse(data);
         localStorage.setItem('user_id', user.id_str);
+        localStorage.setItem('screen_name', user.screen_name);
       }
       oauth.sendSignedRequest(url, callback, {
         method: 'GET'
       });
     });
-    function requestServer(userId, url) {
+    function requestServer(url) {
+      var name = localStorage.getItem('screen_name');
+      if (!name) return console.log('Name is not registered.');
+
       var xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function(data) {
         if (xhr.readyState === 4) {
@@ -53,19 +57,18 @@
         });
       }
 
-      //xhr.open('POST', 'http://mesolabs.no.de/', true);
-      xhr.open('POST', 'http://localhost:3000/', true);
+      xhr.open('POST', 'http://mesolabs.no.de/', true);
+      //xhr.open('POST', 'http://localhost:3000/', true);
       xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
-      xhr.send('userId=' + userId + '&url=' + encodeURIComponent(url));
+      xhr.send('name=' + name + '&url=' + encodeURIComponent(url));
     }
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
       if (changeInfo.url) {
         chrome.tabs.getSelected(null, function(tab) {
           if (tabId === tab.id) {
-            var userId = localStorage.getItem('user_id');
             var url = changeInfo.url;
-            if (userId && url) {
-              requestServer(userId, tab.url);
+            if (url) {
+              requestServer(tab.url);
             }
           }
         });
@@ -74,10 +77,9 @@
 
     chrome.tabs.onSelectionChanged.addListener(function(tabId, selectInfo) {
       chrome.tabs.get(tabId, function(tab) {
-        var userId = localStorage.getItem('user_id');
         var url = tab.url;
-        if (userId && url) {
-          requestServer(userId, tab.url);
+        if (url) {
+          requestServer(tab.url);
         }
       });
     });

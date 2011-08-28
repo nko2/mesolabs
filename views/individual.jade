@@ -1,7 +1,7 @@
 script(type='text/javascript')
   $(function() {
-    var userId = $('#userId').text().trim();
-    var socket = io.connect('http://mesolabs.no.de/' + userId);
+    var name = $('#name').text().trim();
+    var socket = io.connect('http://mesolabs.no.de/' + name);
     socket.on('access', function(data) {
       console.log(data);
       if ($('.page').size() > 30) {
@@ -21,8 +21,8 @@ script(type='text/javascript')
         '</p>');
     });
   });
-#userId(style='display: none;')= userId
+#name(style='display: none;')= name
 h2= name
  |&nbsp;is watching these pages NOW.
 #pages
-  img#loading(src="/loading.gif")
+  img#loading(src="/images/loading.gif")

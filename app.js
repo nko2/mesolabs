@@ -9,14 +9,13 @@ var express = require('express'),
     nko = require('nko')('sWq0rm8zUcxb3Isa'),
     RedisStore = require('connect-redis')(express),
     redis = require('redis'),
-    auth = require('connect-auth'),
     scraper = require('./lib/scraper'),
-    settings = require('./settings.js'),
     http = require('http');
 
 var app = module.exports = express.createServer();
 var db = redis.createClient();
-db.del('namespaces', redis.print);
+db.del('namespaces', redis.print); // connectionのリスナが登録済のユーザ
+
 
 // Configuration
 app.configure(function(){
@@ -29,26 +28,15 @@ app.configure(function(){
     secret: 'mesolabs',
     store: new RedisStore()
   }));
+  app.use(app.router);
   app.use(express.static(__dirname + '/public'));
 });
 
 app.configure('development', function(){
-  app.use(auth([auth.Twitter({
-    consumerKey: settings.consumer_key,
-    consumerSecret: settings.consumer_secret,
-    callback: 'http://localhost:3000/signin'
-  })]));
-  app.use(app.router);
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
 });
 
 app.configure('production', function(){
-  app.use(auth([auth.Twitter({
-    consumerKey: settings.consumer_key,
-    consumerSecret: settings.consumer_secret,
-    callback: 'http://mesolabs.no.de/signin'
-  })]));
-  app.use(app.router);
   app.use(express.errorHandler());
 });
 
@@ -56,136 +44,91 @@ app.configure('production', function(){
 const TITLE = 'Stalkr';
 
 app.get('/', function(req, res){
-  if (!req.isAuthenticated()) {
-    res.render('index', {
-      title: TITLE,
-      authenticated: false
-    });
-  } else {
-    http.get({
-      host: 'api.twitter.com',
-      port: 80,
-      path: '/1/users/profile_image/' + req.getAuthDetails().user.username + '.json'
-    }, function(twres) {
-      var profileUrl = twres.headers.location;
-      var user = {
-        id:   req.getAuthDetails().user.user_id,
-        name: req.getAuthDetails().user.username,
-        access_token: req.getAuthDetails()['twitter_oauth_token'],
-        access_token_secret: req.getAuthDetails()['twitter_oauth_token_secret'],
-        profile_url: profileUrl
-      };
-      db.set('name#' + user.name, JSON.stringify(user), redis.print);
-      db.set('id#' + user.id, JSON.stringify(user), redis.print);
-      res.render('authok', {
-        title: TITLE,
-        authenticated: true,
-        name: user.name
-      });
-    });
-  }
-});
-
-app.get('/signin', function(req, res) {
-  if (req.query.denied) {
-    res.render('authng', {
-      title: TITLE,
-      authenticated: false
-    });
-  } else {
-    req.authenticate(['twitter'], function(err, authenticated) {
-      if (err) return console.log('Authenticate Error: ' + err);
-      if (authenticated) {
-        res.redirect('/', 303);
-      }
-    });
-  }
-});
-
-app.get('/logout', function(req, res) {
-  req.logout();
-  res.redirect('/', 303);
-});
-
-app.get('/who_you_follow', function(req, res) {
-  if (!req.isAuthenticated()) {
-    res.redirect('/', 303);
-    return;
-  }
-  res.render('authok', {
+  res.render('index', {
     title: TITLE,
-    authenticated: true,
-    name: req.getAuthDetails().user.username
   });
 });
 
 app.get('/:name', function(req, res) {
-  if (!req.isAuthenticated()) {
-    res.redirect('/', 303);
-    return;
-  }
-  db.get('name#' + req.params.name, function(err, value) {
+  var name = req.params.name;
+  db.get('name#' + name, function(err, value) {
     if (err) return console.log('Redis Error: ' + err);
     if (value) {
-      var userId = (JSON.parse(value)).id;
-      addChannel(userId);
+      addChannel(name);
       res.render('individual', {
         title: TITLE,
-        authenticated: true,
-        name: req.params.name,
-        userId: userId
+        name: name,
       });
     } else {
       res.render('lethimknow', {
         title: TITLE,
-        authenticated: true,
-        name: req.params.name,
-        userId: userId
+        name: name,
       });
     }
   });
 });
 
+function getUser(name, callback) {
+  db.get('name#' + name, function(err, value) {
+    if (err) return callback(err);
+    if (value) {
+      return callback(null, JSON.parse(value));
+    } else {
+      http.get({
+        host: 'api.twitter.com',
+        port: 80,
+        path: '/1/users/profile_image/' + name + '.json'
+      }, function(res) {
+        var user = {
+          name: name,
+          profile_url: res.headers.location
+        };
+        db.set('name#' + name, JSON.stringify(user), redis.print);
+        return callback(null, user);
+      });
+    }
+  });
+}
+
+
 var ee = new events.EventEmitter();
 app.post('/', function(req, res) {
-  var userId = req.body.userId;
+  var name = req.body.name;
   var url = req.body.url;
   var timestamp = new Date().getTime();
   if (url.lastIndexOf('http') !== 0) return res.send(200);
-  scraper(url, function(err, $) {
-    if (err) return console.log('Scraping Error:' + err);
-    var title = $('title').text().trim();
-    if (title) {
-      url = decodeURIComponent(url);
-      console.log(userId + ": " + title + "(" + url + ")");
-      db.get('id#' + userId, function(err, value) {
-        if (err) return console.log('Redis Error: ' + err);
-        if (value) {
-          var user = JSON.parse(value);
-          var data = {
-            user: user,
-            url: url,
-            title: title,
-            timestamp: timestamp
-          };
-          saveCache(userId, data);
-          saveCache('_all', data);
-          ee.emit(userId, data);
-          ee.emit('_all', data);
-        }
-      });
-    }
+
+  getUser(name, function(err, user) {
+    if (err) return console.log('getUser Error:' + err);
+    scraper(url, function(err, $) {
+      if (err) return console.log('Scraping Error:' + err);
+      var title = $('title').text().trim();
+      if (title) {
+        url = decodeURIComponent(url);
+        console.log(name + ": " + title + "(" + url + ")");
+        var data = {
+          user: user,
+          url: url,
+          title: title,
+          timestamp: timestamp
+        };
+        saveCache(name, data);
+        saveCache('_all', data);
+        ee.emit(name, data);
+        ee.emit('_all', data);
+      }
+    });
   });
   res.send(200);
 });
 
-function saveCache(namespace, data) {
-  db.llen(namespace, function(err, len) {
+function saveCache(name, data) {
+  db.llen(name, function(err, len) {
     if (err) return console.log('Redis Error: ' + err);
     if (len >= 30) {
-      db.lpop(namespace, redis.print);
+      db.lpop(name, redis.print);
     }
-    db.rpush(namespace, JSON.stringify(data), redis.print);
+    db.rpush(name, JSON.stringify(data), redis.print);
   });
 }
 
@@ -193,23 +136,22 @@ app.listen(process.env.PORT || 3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
 var io = socketio.listen(app);
-function addChannel(userId) {
-  db.sismember('namespaces', userId, function(err, value) {
+function addChannel(name) {
+  db.sismember('namespaces', name, function(err, value) {
     if (err) return console.log('Redis Error: ' + err);
     if (value === 1) return;
-    io.of('/' + userId).on('connection', function(socket) {
-      db.lrange(userId, 0, 29, function(err, value) {
+    io.of('/' + name).on('connection', function(socket) {
+      db.lrange(name, 0, 29, function(err, value) {
         if (err) return console.log('Redis Error: ' + err);
-        console.log(value);
         value.forEach(function(element, index, array) {
           socket.emit('access', JSON.parse(element));
         });
       });
-      ee.on(userId, function(data) {
+      ee.on(name, function(data) {
         socket.emit('access', data);
       });
     });
-    db.sadd('namespaces', userId, redis.print);
+    db.sadd('namespaces', name, redis.print);
   });
 }
 
