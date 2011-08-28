@@ -1,5 +1,6 @@
 script(type='text/javascript')
   $(function() {
+    var params = 'keepThis=true&TB_iframe=true&height=500&width=800';
     var socket = io.connect();
 
     socket.on('access', function(data) {
@@ -10,22 +11,34 @@ script(type='text/javascript')
       var user = data.user;
       var date = new Date(data.timestamp);
       $('#loading').hide();
+      if (data.url.indexOf('?') === -1) {
+        var iframeUrl = data.url + '?keepThis=true';
+        $('#now').attr('href', data.url + '?' + params);
+      } else {
+        var iframeUrl = data.url + '&keepThis=true';
+        $('#now').attr('href', data.url + '&' + params);
+      }
+      $('#now').attr('title', data.title);
       $('#pages').prepend(
-        '<p class="page">' +
-          '<a href="/' + user.name + '">' +
-            '<img src="' + user.profile_url + '" style="float: left;"/>' + 
+        '<p class="page" style="clear: both; padding: 5px;">' +
+          '<a style="float: left;" href="/' + user.name + '">' +
+            '<img src="' + user.profile_url + '" />' + 
           '</a>' +
           '<span style="font-weight: bold">' + data.title + '</span> ' +
           '(<a href="' + data.url + '">' + data.url + '</a>)' +
           '<br /><span style="color: #AEAEAE;">' + date.toLocaleString() + '</span>' + 
         '</p>');
+      $('#TB_iframeContent').attr('src', data.url);
+      tb_showIframe();
     });
   });
 h3 Install 
   a(href="/files/stalkr.crx") Google Chrome Extension
   |&nbsp;first.
 h3 If you want to *stalk* someone specific, click his/her icon or go http://mesolabs.no.de/:name
-
-h2 People are watching these pages NOW.
+br
+h2 People are watching these pages 
+  a(href="#",title="",class="thickbox",id="now") NOW
+  .
 #pages
   img#loading(src="/images/loading.gif")

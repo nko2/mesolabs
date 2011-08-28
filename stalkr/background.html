@@ -57,8 +57,8 @@
         });
       }
 
-      xhr.open('POST', 'http://mesolabs.no.de/', true);
-      //xhr.open('POST', 'http://localhost:3000/', true);
+      //xhr.open('POST', 'http://mesolabs.no.de/', true);
+      xhr.open('POST', 'http://localhost:3000/', true);
       xhr.setRequestHeader("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
       xhr.send('name=' + name + '&url=' + encodeURIComponent(url));
     }

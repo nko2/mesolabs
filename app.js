@@ -15,7 +15,7 @@ var express = require('express'),
 var app = module.exports = express.createServer();
 var db = redis.createClient();
 db.del('namespaces', redis.print); // connectionのリスナが登録済のユーザ
-
+var home = 'http://mesolabs.no.de/';
 
 // Configuration
 app.configure(function(){
@@ -33,6 +33,7 @@ app.configure(function(){
 });
 
 app.configure('development', function(){
+  home = 'http://localhost:3000/';
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
 });
 
@@ -45,7 +46,7 @@ const TITLE = 'Stalkr';
 
 app.get('/', function(req, res){
   res.render('index', {
-    title: TITLE,
+    title: TITLE
   });
 });
 
@@ -58,11 +59,12 @@ app.get('/:name', function(req, res) {
       res.render('individual', {
         title: TITLE,
         name: name,
+        home: home
       });
     } else {
       res.render('lethimknow', {
         title: TITLE,
-        name: name,
+        name: name
       });
     }
   });

@@ -1,7 +1,9 @@
 script(type='text/javascript')
   $(function() {
+    var params = 'keepThis=true&TB_iframe=true&height=500&width=800';
     var name = $('#name').text().trim();
-    var socket = io.connect('http://mesolabs.no.de/' + name);
+    var home = $('#home').text().trim();
+    var socket = io.connect(home + name);
     socket.on('access', function(data) {
       console.log(data);
       if ($('.page').size() > 30) {
@@ -10,19 +12,33 @@ script(type='text/javascript')
       var user = data.user;
       var date = new Date(data.timestamp);
       $('#loading').hide();
+      if (data.url.indexOf('?') === -1) {
+        var iframeUrl = data.url + '?keepThis=true';
+        $('#now').attr('href', data.url + '?' + params);
+      } else {
+        var iframeUrl = data.url + '&keepThis=true';
+        $('#now').attr('href', data.url + '&' + params);
+      }
+      $('#now').attr('title', data.title);
       $('#pages').prepend(
-        '<p class="page">' +
-          '<a href="/' + user.name + '">' +
-            '<img src="' + user.profile_url + '" style="float: left;"/>' + 
+        '<p class="page" style="clear: both; padding: 5px;">' +
+          '<a style="float: left;" href="/' + user.name + '">' +
+            '<img src="' + user.profile_url + '" />' + 
           '</a>' +
           '<span style="font-weight: bold">' + data.title + '</span> ' +
           '(<a href="' + data.url + '">' + data.url + '</a>)' +
           '<br /><span style="color: #AEAEAE;">' + date.toLocaleString() + '</span>' + 
         '</p>');
+      $('#TB_iframeContent').attr('src', data.url);
+      tb_showIframe();
     });
   });
 #name(style='display: none;')= name
+#home(style='display: none;')= home
+br
 h2= name
- |&nbsp;is watching these pages NOW.
+ |&nbsp;is watching these pages
+ a(href="#",title="",class="thickbox",id="now") NOW
+ .
 #pages
   img#loading(src="/images/loading.gif")
