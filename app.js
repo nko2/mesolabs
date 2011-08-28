@@ -98,7 +98,7 @@ app.post('/', function(req, res) {
   var name = req.body.name;
   var url = req.body.url;
   var timestamp = new Date().getTime();
-  if (!name || name === 'undefind') return res.send(200);
+  if (!name || name === 'undefined') return res.send(200);
   if (!url) return res.send(200);
   if (url.lastIndexOf('http') !== 0) return res.send(200);
 
