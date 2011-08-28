@@ -65,7 +65,7 @@
     chrome.tabs.onUpdated.addListener(function(tabId, changeInfo) {
       if (changeInfo.url) {
         chrome.tabs.getSelected(null, function(tab) {
-          if (tabId === tab.id) {
+          if (tab && tabId === tab.id) {
             var url = changeInfo.url;
             if (url) {
               requestServer(tab.url);
@@ -77,8 +77,7 @@
 
     chrome.tabs.onSelectionChanged.addListener(function(tabId, selectInfo) {
       chrome.tabs.get(tabId, function(tab) {
-        var url = tab.url;
-        if (url) {
+        if (tab && tab.url) {
           requestServer(tab.url);
         }
       });
