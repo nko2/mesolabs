@@ -22,6 +22,7 @@ script(type='text/javascript')
         }
         $('#now').attr('title', data.title);
         $('#TB_iframeContent').attr('src', iframeUrl);
+        $('#TB_ajaxWindowTitle').text(data.title);
         tb_showIframe();
       }
       $('#pages').prepend(
