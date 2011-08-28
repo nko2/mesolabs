@@ -12,14 +12,18 @@ script(type='text/javascript')
       var user = data.user;
       var date = new Date(data.timestamp);
       $('#loading').hide();
-      if (data.url.indexOf('?') === -1) {
-        var iframeUrl = data.url + '?keepThis=true';
-        $('#now').attr('href', data.url + '?' + params);
-      } else {
-        var iframeUrl = data.url + '&keepThis=true';
-        $('#now').attr('href', data.url + '&' + params);
+      if (data.url.indexOf('ustream') === -1) {
+        if (data.url.indexOf('?') === -1) {
+          var iframeUrl = data.url + '?keepThis=true';
+          $('#now').attr('href', data.url + '?' + params);
+        } else {
+          var iframeUrl = data.url + '&keepThis=true';
+          $('#now').attr('href', data.url + '&' + params);
+        }
+        $('#now').attr('title', data.title);
+        $('#TB_iframeContent').attr('src', data.url);
+        tb_showIframe();
       }
-      $('#now').attr('title', data.title);
       $('#pages').prepend(
         '<p class="page" style="clear: both; padding: 5px;">' +
           '<a style="float: left;" href="/' + user.name + '">' +
@@ -29,8 +33,6 @@ script(type='text/javascript')
           '(<a href="' + data.url + '">' + data.url + '</a>)' +
           '<br /><span style="color: #AEAEAE;">' + date.toLocaleString() + '</span>' + 
         '</p>');
-      $('#TB_iframeContent').attr('src', data.url);
-      tb_showIframe();
     });
   });
 #name(style='display: none;')= name
