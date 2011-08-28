@@ -140,6 +140,8 @@ app.listen(process.env.PORT || 3000);
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 
 var io = socketio.listen(app);
+io.set('polling duration', 60 * 60);
+io.set('close timeout', 60 * 60);
 function addChannel(name) {
   db.sismember('namespaces', name, function(err, value) {
     if (err) return console.log('Redis Error: ' + err);
